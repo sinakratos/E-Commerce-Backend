@@ -9,7 +9,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @ApiProperty({ example: 'NewPassword123!', required: false })
   password?: string;
 
-  @ApiProperty({ example: '+989123456789', required: false })
+  @ApiProperty({ example: '989123456789', required: false })
   phone?: string;
 
   @ApiProperty({ example: 'ADMIN', required: false })

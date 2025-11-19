@@ -18,6 +18,10 @@ export class UserEntity {
   @Column({ length: 100 })
   username: string;
 
+  @ApiProperty({ example: '989123456789' })
+  @Column({ unique: true, nullable: true })
+  phone: string;
+
   @ApiProperty({ example: 'sina@example.com' })
   @Column({ unique: true })
   email: string;

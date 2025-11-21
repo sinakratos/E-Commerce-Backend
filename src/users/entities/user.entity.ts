@@ -26,11 +26,11 @@ export class UserEntity {
   @Column({ unique: true })
   email: string;
 
-  @ApiProperty({ example: 'hashed_password', description: 'Hashed value' })
+  @ApiProperty()
   @Column()
   password: string;
 
-  @ApiProperty({ example: Role.USER })
+  @ApiProperty()
   @Column({ type: 'enum', enum: Role, default: Role.USER })
   role: Role;
 

@@ -9,7 +9,7 @@ import {
 import { Role } from 'src/common/enums/Role.enum';
 
 export class CreateUserDto {
-  @ApiProperty({ example: 'sina' })
+  @ApiProperty({ example: 'sina'})
   @IsNotEmpty()
   username: string;
 

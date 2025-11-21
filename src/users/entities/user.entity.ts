@@ -10,12 +10,12 @@ import { Role } from 'src/common/enums/Role.enum';
 
 @Entity('users')
 export class UserEntity {
-  @ApiProperty({ example: 1 })
+  @ApiProperty()
   @PrimaryGeneratedColumn()
   id: number;
 
   @ApiProperty({ example: 'sina' })
-  @Column({ length: 100 })
+  @Column({ length: 100, unique: true })
   username: string;
 
   @ApiProperty({ example: '989123456789' })

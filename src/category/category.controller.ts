@@ -1,34 +1,72 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+
 import { CategoryService } from './category.service';
+
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
-@Controller('category')
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { Role } from 'src/common/enums/Role.enum';
+import { Roles } from 'src/common/decorators/roles.decorator';
+
+@ApiBearerAuth()
+@ApiTags('Categories')
+@Controller('categories')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
+  @UseGuards(RolesGuard, JwtAuthGuard)
+  @Roles(Role.USER)
+  @ApiOperation({ summary: 'Create a new category' })
+  @UseGuards(RolesGuard, JwtAuthGuard)
+  @Roles(Role.USER)
+  @ApiOperation({ summary: 'Create a new category' })
   create(@Body() createCategoryDto: CreateCategoryDto) {
     return this.categoryService.create(createCategoryDto);
   }
 
   @Get()
+  @UseGuards(RolesGuard, JwtAuthGuard)
+  @Roles(Role.USER)
+  @ApiOperation({ summary: 'Get all categories' })
   findAll() {
     return this.categoryService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.categoryService.findOne(+id);
+  @UseGuards(RolesGuard, JwtAuthGuard)
+  @Roles(Role.USER)
+  @ApiOperation({ summary: 'Get a category by ID' })
+  findOne(@Param('id') id: number) {
+    return this.categoryService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
-    return this.categoryService.update(+id, updateCategoryDto);
+  @UseGuards(RolesGuard, JwtAuthGuard)
+  @Roles(Role.USER)
+  @ApiOperation({ summary: 'Update a category by ID' })
+  update(@Param('id') id: number, @Body() dto: UpdateCategoryDto) {
+    return this.categoryService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.categoryService.remove(+id);
+  @UseGuards(RolesGuard, JwtAuthGuard)
+  @Roles(Role.USER)
+  @ApiOperation({ summary: 'Remove a category by ID' })
+  remove(@Param('id') id: number) {
+    return this.categoryService.remove(id);
   }
 }

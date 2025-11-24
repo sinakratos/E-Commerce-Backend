@@ -22,16 +22,13 @@ import { Role } from 'src/common/enums/Role.enum';
 import { Roles } from 'src/common/decorators/roles.decorator';
 
 @ApiBearerAuth()
-@ApiTags('Categories')
-@Controller('categories')
+@ApiTags('Category')
+@Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
-  @UseGuards(RolesGuard, JwtAuthGuard)
-  @Roles(Role.USER)
-  @ApiOperation({ summary: 'Create a new category' })
-  @UseGuards(RolesGuard, JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.USER)
   @ApiOperation({ summary: 'Create a new category' })
   create(@Body() createCategoryDto: CreateCategoryDto) {
@@ -39,7 +36,7 @@ export class CategoryController {
   }
 
   @Get()
-  @UseGuards(RolesGuard, JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.USER)
   @ApiOperation({ summary: 'Get all categories' })
   findAll() {
@@ -47,7 +44,7 @@ export class CategoryController {
   }
 
   @Get(':id')
-  @UseGuards(RolesGuard, JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.USER)
   @ApiOperation({ summary: 'Get a category by ID' })
   findOne(@Param('id') id: number) {
@@ -55,7 +52,7 @@ export class CategoryController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard, JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.USER)
   @ApiOperation({ summary: 'Update a category by ID' })
   update(@Param('id') id: number, @Body() dto: UpdateCategoryDto) {
@@ -63,7 +60,7 @@ export class CategoryController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard, JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.USER)
   @ApiOperation({ summary: 'Remove a category by ID' })
   remove(@Param('id') id: number) {

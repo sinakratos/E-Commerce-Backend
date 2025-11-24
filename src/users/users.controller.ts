@@ -39,7 +39,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  @UseGuards(RolesGuard, JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Get a user by ID' })
   async findOne(@Param('id') id: string) {
@@ -47,7 +47,7 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard, JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update a user' })
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
@@ -55,7 +55,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard, JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Remove a user' })
   remove(@Param('id') id: string) {

@@ -4,9 +4,13 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+
 import { Role } from 'src/common/enums/Role.enum';
+
+import { Order } from 'src/order/entities/order.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -33,6 +37,9 @@ export class UserEntity {
   @ApiProperty()
   @Column({ type: 'enum', enum: Role, default: Role.USER })
   role: Role;
+
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
 
   @ApiProperty()
   @CreateDateColumn()

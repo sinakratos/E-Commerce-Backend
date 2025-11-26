@@ -6,9 +6,10 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
+
+import { OrderStatus } from 'src/common/enums/order-status.enum';
 import { UserEntity } from 'src/users/entities/user.entity';
-// import { OrderItem } from '../../order-item/entities/order-item.entity';
-// import { OrderStatus } from '../../common/enums/order-status.enum';
+import { OrderItem } from 'src/order-item/entities/order-item.entity';
 
 @Entity()
 export class Order {
@@ -18,18 +19,18 @@ export class Order {
   @ManyToOne(() => UserEntity, (user) => user.orders, { onDelete: 'CASCADE' })
   user: UserEntity;
 
-  @Column('decimal')
+  @Column()
   totalPrice: number;
 
-  //   @Column({
-  //     type: 'enum',
-  //     enum: OrderStatus,
-  //     default: OrderStatus.PENDING,
-  //   })
-  //   status: OrderStatus;
+  @Column({
+    type: 'enum',
+    enum: OrderStatus,
+    default: OrderStatus.PENDING,
+  })
+  status: OrderStatus;
 
-  //   @OneToMany(() => OrderItem, (item) => item.order)
-  //   items: OrderItem[];
+  @OneToMany(() => OrderItem, (item) => item.order)
+  items: OrderItem[];
 
   @CreateDateColumn()
   createdAt: Date;

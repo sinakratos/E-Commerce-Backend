@@ -1,49 +1,103 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { Repository, DataSource } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 
 import { Order } from './entities/order.entity';
+import { CreateOrderDto } from './dto/create-order.dto';
 
-import { OrderStatus } from '../common/enums/order-status.enum';
+import { OrderItem } from 'src/order-item/entities/order-item.entity';
+import { UserEntity } from 'src/users/entities/user.entity';
+import { OrderStatus } from 'src/common/enums/order-status.enum';
+import { Product } from 'src/product/entities/product.entity';
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
+    private orderRepository: Repository<Order>,
+
+    @InjectRepository(OrderItem)
+    private orderItemRepository: Repository<OrderItem>,
+
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
+
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
+
+    private dataSource: DataSource,
   ) {}
 
-  async create(userId: number, totalPrice: number): Promise<Order> {
-    const order = this.orderRepository.create({
-      user: { id: userId } as any,
-      totalPrice,
-    });
+  // ✅ TOTAL PRICE IS CALCULATED RIGHT HERE ✅
+  async create(userId: number, createOrderDto: CreateOrderDto) {
+    return this.dataSource.transaction(async (manager) => {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user) throw new NotFoundException('User not found');
 
-    return this.orderRepository.save(order);
+      let totalPrice = 0;
+
+      const order = manager.create(Order, {
+        user,
+        status: OrderStatus.PENDING,
+        totalPrice: 0,
+      });
+
+      const savedOrder = await manager.save(order);
+
+      for (const item of createOrderDto.items) {
+        const product = await manager.findOne(Product, {
+          where: { id: item.productId },
+        });
+
+        if (!product) throw new NotFoundException('Product not found');
+
+        if (product.stock < item.quantity) {
+          throw new BadRequestException('Not enough stock');
+        }
+
+        const itemTotal = product.price * item.quantity;
+        totalPrice += itemTotal;
+
+        const orderItem = manager.create(OrderItem, {
+          order: savedOrder,
+          product,
+          quantity: item.quantity,
+          price: product.price,
+        });
+
+        await manager.save(orderItem);
+
+        product.stock -= item.quantity;
+        await manager.save(product);
+      }
+
+      savedOrder.totalPrice = totalPrice;
+      return manager.save(savedOrder);
+    });
   }
 
-  async findAll(): Promise<Order[]> {
+  findAll() {
     return this.orderRepository.find({
-      relations: ['user', 'items'],
+      relations: ['user', 'items', 'items.product'],
     });
   }
 
-  async findOne(id: number): Promise<Order> {
-    const order = await this.orderRepository.findOne({
+  findOne(id: number) {
+    return this.orderRepository.findOne({
       where: { id },
-      relations: ['user', 'items'],
+      relations: ['user', 'items', 'items.product'],
     });
-
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
-
-    return order;
   }
 
-  async updateStatus(id: number, status: OrderStatus): Promise<Order> {
-    await this.findOne(id);
-    // await this.orderRepository.update(id, { status });
-    return this.findOne(id);
+  async updateStatus(id: number, status: OrderStatus) {
+    const order = await this.findOne(id);
+    if (!order) throw new NotFoundException('Order not found');
+
+    order.status = status;
+    return this.orderRepository.save(order);
   }
 }

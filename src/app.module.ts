@@ -8,6 +8,7 @@ import { CategoryModule } from './category/category.module';
 import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
 import { OrderItemModule } from './order-item/order-item.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { OrderItemModule } from './order-item/order-item.module';
     ProductModule,
     OrderModule,
     OrderItemModule,
+    PaymentModule,
   ],
   providers: [],
 })

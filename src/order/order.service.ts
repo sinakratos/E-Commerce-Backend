@@ -32,7 +32,6 @@ export class OrderService {
     private dataSource: DataSource,
   ) {}
 
-  // ✅ TOTAL PRICE IS CALCULATED RIGHT HERE ✅
   async create(userId: number, createOrderDto: CreateOrderDto) {
     return this.dataSource.transaction(async (manager) => {
       const user = await this.userRepository.findOne({ where: { id: userId } });

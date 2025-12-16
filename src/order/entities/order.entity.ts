@@ -19,7 +19,7 @@ export class Order {
   @ManyToOne(() => UserEntity, (user) => user.orders, { onDelete: 'CASCADE' })
   user: UserEntity;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column()
   totalPrice: number;
 
   @Column({

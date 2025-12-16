@@ -40,7 +40,7 @@ export class UsersController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.USER)
   @ApiOperation({ summary: 'Get a user by ID' })
   async findOne(@Param('id') id: string) {
     return await this.usersService.findOne(+id);

@@ -29,8 +29,8 @@ export class CategoryController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.USER)
   @ApiOperation({ summary: 'Create a new category' })
+  @Roles(Role.USER)
   create(@Body() createCategoryDto: CreateCategoryDto) {
     return this.categoryService.create(createCategoryDto);
   }

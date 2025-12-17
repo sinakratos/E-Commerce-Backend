@@ -7,8 +7,6 @@ import {
   MinLength,
 } from 'class-validator';
 
-import { Role } from 'src/common/enums/Role.enum';
-
 export class RegisterDto {
   @ApiProperty({ example: 'sina' })
   @IsNotEmpty()

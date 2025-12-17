@@ -41,6 +41,15 @@ export class UserEntity {
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 
+  @Column({ default: false })
+  isEmailVerified: boolean;
+
+  @Column({ nullable: true })
+  emailVerifyToken: string;
+
+  @Column({ nullable: true })
+  emailVerifyTokenExpires: Date;
+
   @ApiProperty()
   @CreateDateColumn()
   createdAt: Date;

@@ -6,10 +6,11 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
+
 import { Role } from 'src/common/enums/Role.enum';
 
-export class CreateUserDto {
-  @ApiProperty({ example: 'sina'})
+export class RegisterDto {
+  @ApiProperty({ example: 'sina' })
   @IsNotEmpty()
   username: string;
 

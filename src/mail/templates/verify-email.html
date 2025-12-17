@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" style="margin:0;padding:0;">
+
+<body style="font-family:Arial,Helvetica,sans-serif;background:#f5f6fa;margin:0;padding:0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6fa;padding:40px 0;">
+        <tr>
+            <td align="center">
+
+                <!-- Card -->
+                <table width="600" cellpadding="0" cellspacing="0"
+                    style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 4px 8px rgba(0,0,0,0.05);">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="background:#4c6ef5;text-align:center;padding:30px;color:white;">
+                            <h1 style="margin:0;font-size:28px;font-weight:600;">Verify your email</h1>
+                            <p style="margin:8px 0 0;font-size:15px;opacity:.9;">
+                                Welcome to our E-Commerce platform!
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding:35px;">
+
+                            <p style="font-size:16px;margin:0 0 20px;">
+                                Hey <strong>{{username}}</strong>👋,
+                            </p>
+
+                            <p style="font-size:15px;line-height:1.7;margin:0 0 30px;">
+                                Thank you for signing up!
+                                To complete your registration, please verify your email address by clicking the button
+                                below:
+                            </p>
+
+                            <!-- Button -->
+                            <div style="text-align:center;margin-bottom:30px;">
+                                <a href="{{verifyUrl}}" target="_blank" style="
+display:inline-block;
+background:#4c6ef5;
+color:white;
+padding:14px 28px;
+border-radius:6px;
+text-decoration:none;
+font-size:16px;
+font-weight:600;
+">
+                                    Verify Email
+                                </a>
+                            </div>
+
+                            <p style="font-size:13px;line-height:1.6;color:#555;margin-bottom:20px;">
+                                If the button doesn’t work, you can also use the Token:<br>
+                                <span style="word-break:break-all;color:#020511;">{{Token}}</span>
+                            </p>
+
+                            <hr style="border:none;border-top:1px solid #eee;margin:30px 0;">
+
+                            <p style="font-size:12px;color:#999;text-align:center;">
+                                This link expires in 15 minutes. If you didn’t request this, you can safely ignore this
+                                email.
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background:#f1f3f5;padding:20px;text-align:center;font-size:12px;color:#666;">
+                            © 2025 YourCompany Inc. All rights reserved.
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

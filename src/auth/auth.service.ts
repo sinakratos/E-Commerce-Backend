@@ -84,7 +84,6 @@ export class AuthService {
     });
 
     const token = randomBytes(32).toString('hex');
-    console.log(token);
 
     user.emailVerifyToken = token;
     user.emailVerifyTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);

@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -7,6 +11,9 @@ import { Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
 
 import { UserEntity } from 'src/users/entities/user.entity';
+import { isPasswordValid } from 'src/common/utils/isPasswordValid';
+import { hashPassword } from 'src/common/utils/password.util';
+import { Role } from 'src/common/enums/Role.enum';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +35,34 @@ export class AuthService {
     );
     if (!isPasswordValid)
       throw new UnauthorizedException('Invalid credentials');
+
+    return this.generateTokens(user);
+  }
+
+  async register(registerDto: Partial<UserEntity>) {
+    const { username, email, phone, password, role } = registerDto;
+    if (!isPasswordValid(password)) {
+      throw new InternalServerErrorException(
+        'Password must be at least 8 characters long, contain uppercase, lowercase letters, and at least one number.',
+      );
+    }
+
+    const existUser = await this.usersRepository.findOne({
+      where: [{ username }, { email }, { phone }],
+    });
+    if (existUser) {
+      throw new InternalServerErrorException(
+        'Username, email, or phone already taken',
+      );
+    }
+
+    const user = this.usersRepository.create({
+      ...registerDto,
+      password: await hashPassword(password),
+      role: role ?? Role.USER,
+    });
+
+    this.usersRepository.save(user);
 
     return this.generateTokens(user);
   }

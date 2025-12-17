@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 import { UserEntity } from './entities/user.entity';
+import { Role } from 'src/common/enums/Role.enum';
 
 @Injectable()
 export class UsersService {
@@ -23,6 +24,17 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
     return user;
+  }
+
+  async toggleAdmin(id: number) {
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    user.role = user.role === Role.ADMIN ? Role.USER : Role.ADMIN;
+
+    await this.usersRepository.save(user);
+    return { message: `Role updated to ${user.role}` };
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {

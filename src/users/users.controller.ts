@@ -40,6 +40,14 @@ export class UsersController {
     return await this.usersService.findOne(+id);
   }
 
+  @Patch('toggle-admin/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Toggle admin role for a user' })
+  async toggleAdmin(@Param('id') id: number) {
+    return await this.usersService.toggleAdmin(id);
+  }
+
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)

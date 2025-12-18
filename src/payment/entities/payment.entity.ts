@@ -37,6 +37,15 @@ export class Payment {
   })
   method: PaymentMethod;
 
+  @Column({ unique: true })
+  authority: string;
+
+  @Column({ nullable: true })
+  refId: string;
+
+  @Column()
+  orderId: number;
+
   @CreateDateColumn()
   createdAt: Date;
 }

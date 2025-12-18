@@ -1,5 +1,11 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBody,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
 
@@ -31,10 +37,17 @@ export class AuthController {
   }
 
   @Post('resend-verification')
-  @ApiOperation({
-    summary: 'Resend verification email to user',
+  @ApiOperation({ summary: 'Resend verification email' })
+  @ApiBody({
+    schema: {
+      example: { email: 'user@example.com' },
+    },
   })
-  resendVerification(@Body() dto: ResendVerificationDto) {
-    return this.authService.resendVerification(dto.email);
+  @ApiOkResponse({ description: 'Verification email resent successfully' })
+  @ApiBadRequestResponse({
+    description: 'User already verified or email not found',
+  })
+  resendVerification(@Body() resendVerificationDto: ResendVerificationDto) {
+    return this.authService.resendVerification(resendVerificationDto.email);
   }
 }

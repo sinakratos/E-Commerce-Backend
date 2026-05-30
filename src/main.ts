@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,6 +18,11 @@ async function bootstrap() {
     }),
   );
 
+  app.use(cookieParser());
+  app.enableCors({
+    origin: ['http://localhost:3000', '*'], // frontend origin(s)
+    credentials: true,
+  });
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('My API')

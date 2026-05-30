@@ -1,135 +1,197 @@
+// src/auth/auth.service.ts
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
-  InternalServerErrorException,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
+import { authenticator } from 'otplib';
 import { Repository } from 'typeorm';
-import { randomBytes } from 'crypto';
-
-import { RegisterDto } from './dto/registerDto';
-import { LoginDto } from './dto/login.dto';
 
 import { UserEntity } from 'src/users/entities/user.entity';
-import { isPasswordValid } from 'src/common/utils/isPasswordValid';
-import { hashPassword } from 'src/common/utils/password.util';
-import { MailService } from 'src/mail/mail.service';
+import { JwtPayload } from './jwt.strategy';
+import { RegisterDto } from './dto/registerDto';
+
+export type SafeUser = Omit<UserEntity, 'otpSecret'>;
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly usersRepository: Repository<UserEntity>,
+    private readonly users: Repository<UserEntity>,
     private readonly jwt: JwtService,
-    private readonly mailService: MailService,
-  ) {}
-
-  async login(loginDto: LoginDto) {
-    const user = await this.usersRepository.findOne({
-      where: { username: loginDto.username },
-    });
-    if (!user) throw new UnauthorizedException('Invalid username or password');
-
-    if (!user.isEmailVerified)
-      throw new UnauthorizedException('Email not verified');
-
-    const isPasswordValid = await bcrypt.compare(
-      loginDto.password,
-      user.password,
-    );
-    if (!isPasswordValid)
-      throw new UnauthorizedException('Invalid credentials');
-
-    return this.generateTokens(user);
+    private readonly config: ConfigService,
+  ) {
+    authenticator.options = { digits: 4, step: 120, window: 1 };
   }
 
-  private generateTokens(user: UserEntity) {
-    const payload = {
+  // ─── Helpers ────────────────────────────────────────────────────────────────
+
+  private sanitize(user: UserEntity): SafeUser {
+    const { otpSecret: _, ...safe } = user as UserEntity & {
+      otpSecret?: string;
+    };
+    return safe as SafeUser;
+  }
+
+  private issueAccessToken(user: UserEntity): Promise<string> {
+    const payload: JwtPayload = {
       sub: user.id,
       role: user.role,
+      phone: user.phone,
       email: user.email,
       username: user.username,
     };
-
-    return {
-      access_token: this.jwt.sign(payload, { expiresIn: '15m' }),
-      refresh_token: this.jwt.sign(payload, { expiresIn: '7d' }),
-    };
+    return this.jwt.signAsync(payload, {
+      secret: this.config.getOrThrow('JWT_ACCESS_SECRET'),
+      expiresIn: this.config.get('JWT_ACCESS_EXPIRES_IN') ?? '15m',
+    });
   }
 
-  async register(registerDto: RegisterDto) {
-    const { username, email, phone, password } = registerDto;
-    if (!isPasswordValid(password)) {
-      throw new InternalServerErrorException(
-        'Password must be at least 8 characters long, contain uppercase, lowercase letters, and at least one number.',
-      );
+  private issueRefreshToken(user: UserEntity): Promise<string> {
+    return this.jwt.signAsync(
+      { sub: user.id, type: 'refresh' },
+      {
+        secret: this.config.getOrThrow('JWT_REFRESH_SECRET'),
+        expiresIn: this.config.get('JWT_REFRESH_EXPIRES_IN') ?? '60d',
+      },
+    );
+  }
+
+  private normalizePhone(raw: string): string {
+    return String(raw).trim();
+  }
+
+  // ─── Registration ────────────────────────────────────────────────────────────
+
+  async register(dto: RegisterDto): Promise<{ status: string }> {
+    const phone = this.normalizePhone(dto.phone);
+
+    const existing = await this.users.findOne({
+      where: [{ phone }, { email: dto.email }, { username: dto.username }],
+    });
+
+    if (existing) {
+      if (existing.phone === phone)
+        throw new ConflictException('این شماره قبلاً ثبت شده است');
+      if (existing.email === dto.email)
+        throw new ConflictException('این ایمیل قبلاً ثبت شده است');
+      throw new ConflictException('این نام کاربری قبلاً ثبت شده است');
     }
 
-    const existUser = await this.usersRepository.findOne({
-      where: [{ username }, { email }, { phone }],
+    // Generate a fresh TOTP secret for this user
+    const otpSecret = authenticator.generateSecret();
+
+    const user = this.users.create({
+      username: dto.username,
+      phone,
+      email: dto.email,
+      otpSecret,
     });
-    if (existUser) {
-      throw new InternalServerErrorException(
-        'Username, email, or phone already taken',
-      );
+
+    await this.users.save(user);
+
+    // Generate and (in production) send OTP via SMS
+    const code = authenticator.generate(otpSecret);
+    console.log(`[OTP] ${phone} → ${code}`); // replace with SMS provider
+
+    return { status: 'success' };
+  }
+
+  // ─── Send OTP (login) ────────────────────────────────────────────────────────
+
+  async sendOtp(phone: string): Promise<{ status: string }> {
+    phone = this.normalizePhone(phone);
+
+    // Need otpSecret — explicitly select it
+    const user = await this.users
+      .createQueryBuilder('u')
+      .addSelect('u.otpSecret')
+      .where('u.phone = :phone', { phone })
+      .getOne();
+
+    if (!user) throw new BadRequestException('کاربری با این شماره یافت نشد');
+
+    if (!user.otpSecret) {
+      // Shouldn't happen after register, but guard anyway
+      user.otpSecret = authenticator.generateSecret();
+      await this.users.save(user);
     }
 
-    const user = this.usersRepository.create({
-      ...registerDto,
-      password: await hashPassword(password),
-    });
+    const code = authenticator.generate(user.otpSecret);
+    console.log(`[OTP] ${phone} → ${code}`); // replace with SMS provider
 
-    const token = randomBytes(32).toString('hex');
-
-    user.emailVerifyToken = token;
-    user.emailVerifyTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
-
-    await this.usersRepository.save(user);
-
-    await this.mailService.sendVerificationEmail(user.email, token);
-
-    return { message: 'User created. Check email to verify.' };
+    return { status: 'success' };
   }
 
-  async verifyEmail(token: string) {
-    const user = await this.usersRepository.findOne({
-      where: { emailVerifyToken: token },
-    });
+  // ─── Verify OTP & issue tokens ───────────────────────────────────────────────
 
-    if (!user) throw new NotFoundException('Invalid token');
+  async verifyOtpAndIssueTokens(
+    phone: string,
+    code: string,
+  ): Promise<{ user: SafeUser; accessToken: string; refreshToken: string }> {
+    phone = this.normalizePhone(phone);
+    code = String(code).trim();
 
-    if (user.emailVerifyTokenExpires < new Date())
-      throw new BadRequestException('Token expired');
+    const user = await this.users
+      .createQueryBuilder('u')
+      .addSelect('u.otpSecret')
+      .where('u.phone = :phone', { phone })
+      .getOne();
 
-    user.isEmailVerified = true;
-    user.emailVerifyToken = null;
-    user.emailVerifyTokenExpires = null;
+    if (!user) throw new UnauthorizedException('کاربر یافت نشد');
+    if (!user.otpSecret)
+      throw new UnauthorizedException('ابتدا درخواست کد ارسال کنید');
 
-    await this.usersRepository.save(user);
+    const valid = authenticator.check(code, user.otpSecret);
+    if (!valid) throw new UnauthorizedException('کد وارد شده صحیح نمی‌باشد');
 
-    return { message: 'Email verified 🎉' };
+    const [accessToken, refreshToken] = await Promise.all([
+      this.issueAccessToken(user),
+      this.issueRefreshToken(user),
+    ]);
+
+    return { user: this.sanitize(user), accessToken, refreshToken };
   }
 
-  async resendVerification(email: string) {
-    const user = await this.usersRepository.findOne({ where: { email } });
+  // ─── Refresh ─────────────────────────────────────────────────────────────────
 
-    if (!user) throw new NotFoundException('No user found');
+  async refreshFromCookie(refreshToken: string | undefined): Promise<{
+    user: SafeUser;
+    accessToken: string;
+    refreshToken: string;
+  } | null> {
+    if (!refreshToken) return null;
 
-    if (user.isEmailVerified) throw new BadRequestException('Already verified');
+    try {
+      const decoded = await this.jwt.verifyAsync<{
+        sub: number;
+        type: string;
+      }>(refreshToken, {
+        secret: this.config.getOrThrow('JWT_REFRESH_SECRET'),
+      });
 
-    const newToken = randomBytes(32).toString('hex');
+      if (decoded.type !== 'refresh') return null;
 
-    user.emailVerifyToken = newToken;
-    user.emailVerifyTokenExpires = new Date(Date.now() + 86400000);
+      const user = await this.users.findOne({ where: { id: decoded.sub } });
+      if (!user) return null;
 
-    await this.usersRepository.save(user);
+      // Rotate both tokens
+      const [accessToken, newRefreshToken] = await Promise.all([
+        this.issueAccessToken(user),
+        this.issueRefreshToken(user),
+      ]);
 
-    await this.mailService.sendVerificationEmail(email, newToken);
-
-    return { message: 'Verification email sent again.' };
+      return {
+        user: this.sanitize(user),
+        accessToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch {
+      return null;
+    }
   }
 }

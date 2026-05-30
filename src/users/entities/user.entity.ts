@@ -9,7 +9,6 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 
 import { Role } from 'src/common/enums/Role.enum';
-
 import { Order } from 'src/order/entities/order.entity';
 
 @Entity('users')
@@ -23,16 +22,16 @@ export class UserEntity {
   username: string;
 
   @ApiProperty({ example: '989123456789' })
-  @Column({ unique: true, nullable: true })
+  @Column({ unique: true, nullable: false })
   phone: string;
 
   @ApiProperty({ example: 'sina@example.com' })
   @Column({ unique: true })
   email: string;
 
-  @ApiProperty()
-  @Column()
-  password: string;
+  // Internal — never returned to clients
+  @Column({ nullable: true, select: false })
+  otpSecret: string | null;
 
   @ApiProperty()
   @Column({ type: 'enum', enum: Role, default: Role.USER })
@@ -40,15 +39,6 @@ export class UserEntity {
 
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
-
-  @Column({ default: false })
-  isEmailVerified: boolean;
-
-  @Column({ nullable: true })
-  emailVerifyToken: string;
-
-  @Column({ nullable: true })
-  emailVerifyTokenExpires: Date;
 
   @ApiProperty()
   @CreateDateColumn()

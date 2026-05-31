@@ -1,4 +1,3 @@
-// src/auth/auth.service.ts
 import {
   BadRequestException,
   ConflictException,
@@ -11,9 +10,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { authenticator } from 'otplib';
 import { Repository } from 'typeorm';
 
-import { UserEntity } from 'src/users/entities/user.entity';
 import { JwtPayload } from './jwt.strategy';
+
 import { RegisterDto } from './dto/registerDto';
+
+import { UserEntity } from '../users/entities/user.entity';
 
 export type SafeUser = Omit<UserEntity, 'otpSecret'>;
 
@@ -94,7 +95,6 @@ export class AuthService {
 
     await this.users.save(user);
 
-    // Generate and (in production) send OTP via SMS
     const code = authenticator.generate(otpSecret);
     console.log(`[OTP] ${phone} → ${code}`); // replace with SMS provider
 

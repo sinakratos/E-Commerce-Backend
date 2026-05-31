@@ -1,15 +1,22 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
+
+import { AppModule } from './app.module';
+
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const logger: Logger = new Logger('Bootstrap');
-  app.useGlobalInterceptors(new LoggingInterceptor());
+
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new TransformResponseInterceptor(),
+  );
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

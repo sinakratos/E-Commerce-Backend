@@ -26,12 +26,13 @@ import { UserDecorator } from '../common/decorators/user.decorator';
 
 // ─── Cookie config ────────────────────────────────────────────────────────────
 
+const isProduction = process.env.NODE_ENV === 'production';
 const COOKIE_BASE: CookieOptions = {
   httpOnly: true,
-  secure: true, 
-  sameSite: 'none',
+  secure: isProduction,
+  sameSite: isProduction ? 'none' : 'lax',
   path: '/',
-  // domain: '.yourdomain.com', // uncomment for subdomain sharing
+  domain: isProduction ? '.yourdomain.com' : undefined,
 };
 
 const ACCESS_MAX_AGE = 15 * 60 * 1000; // 15 min

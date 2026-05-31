@@ -29,7 +29,6 @@ export class UserEntity {
   @Column({ unique: true })
   email: string;
 
-  // Internal — never returned to clients
   @Column({ nullable: true, select: false })
   otpSecret: string | null;
 

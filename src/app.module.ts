@@ -11,6 +11,7 @@ import { OrderItemModule } from './order-item/order-item.module';
 import { PaymentModule } from './payment/payment.module';
 import { MailModule } from './mail/mail.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
 @Module({
   imports: [
@@ -29,6 +30,6 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestIdMiddleware).forRoutes('*');
+    consumer.apply(LoggerMiddleware, RequestIdMiddleware).forRoutes('*');
   }
 }

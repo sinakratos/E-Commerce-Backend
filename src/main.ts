@@ -30,12 +30,13 @@ async function bootstrap() {
     origin: ['http://localhost:3000', '*'], // frontend origin(s)
     credentials: true,
   });
+
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('My API')
     .setDescription('API documentation for my E-Commerce Project')
     .setVersion('1.0')
-    .addBearerAuth()
+    // .addBearerAuth() 
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

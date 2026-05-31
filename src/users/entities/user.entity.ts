@@ -18,7 +18,7 @@ export class UserEntity {
   id: number;
 
   @ApiProperty({ example: 'sina' })
-  @Column({ length: 100, unique: true })
+  @Column({ length: 100 })
   username: string;
 
   @ApiProperty({ example: '989123456789' })

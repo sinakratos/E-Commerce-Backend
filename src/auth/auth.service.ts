@@ -72,7 +72,7 @@ export class AuthService {
     const phone = this.normalizePhone(dto.phone);
 
     const existing = await this.users.findOne({
-      where: [{ phone }, { email: dto.email }, { username: dto.username }],
+      where: [{ phone }, { email: dto.email }],
     });
 
     if (existing) {
@@ -80,7 +80,6 @@ export class AuthService {
         throw new ConflictException('این شماره قبلاً ثبت شده است');
       if (existing.email === dto.email)
         throw new ConflictException('این ایمیل قبلاً ثبت شده است');
-      throw new ConflictException('این نام کاربری قبلاً ثبت شده است');
     }
 
     // Generate a fresh TOTP secret for this user

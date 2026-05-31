@@ -39,7 +39,7 @@ const ACCESS_MAX_AGE = 15 * 60 * 1000; // 15 min
 const REFRESH_MAX_AGE = 60 * 24 * 60 * 60 * 1000; // 60 days
 
 // ─── Controller ───────────────────────────────────────────────────────────────
-
+ 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
